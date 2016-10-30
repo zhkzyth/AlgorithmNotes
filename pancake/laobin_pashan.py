@@ -18,6 +18,8 @@
 
 备注：
 - 爬山法的实现有点难，还是先放着，后面再回头来写吧，一整天都在消化这个=。=
+- laobin_recursion_better.c里面，用了一个比较简单的node结构，以及基于子集本身的有序性算分的机制，进一步的把dfs的搜索策略优化了，往最容易找到结果集的子空间去探索。
+- TODO 用python实现一个
 """
 import sys
 import json
@@ -25,10 +27,12 @@ import json
 __original_author__ = 'DELL'
 
 
-class Stack:
-
-    node = []
-
+class Node:
+    def __init__(self, children=None, step=None, index=None, cake_list=None):
+        self.children = children
+        self.step = step
+        self.index = index
+        self.cake_list = cake_list
 
 def init(cake_list):
     """
@@ -45,59 +49,11 @@ def init(cake_list):
 
     m_swap_list = m_reverse_swap_list = ["" for i in range(0, m_max_swap)]
 
-    Stack.node.append(m_reverse_list)
+    m_root_node = Node(cake_list=m_reverse_list[:])
 
 
 def cal_upper_bound(cake_count):
     return 2 * cake_count - 3
-
-
-def cal_lowerest_children():
-    """
-    """
-    global m_reverse_list
-
-    smallest_distance = None
-    final_index = 0
-
-    for i in range(1, m_cake_count):
-
-        swap(i, m_reverse_list)
-
-        total_distance = 0
-
-        child = m_reverse_list
-
-        for k,e in reversed(list(enumerate(child))):
-
-            if k == 0:
-                break
-
-            if k == child[k]:
-                continue
-
-            distance = abs(child[k] - child[k-1])
-            if distance == 1:
-                continue
-
-            total_distance = total_distance + 1
-
-        # print "\n"
-        # print "i:", i
-        # print "total_distance:", total_distance
-        # print child
-        # print "\n"
-
-        if total_distance < smallest_distance or smallest_distance is None:
-            smallest_distance = total_distance
-            final_child = child[:]
-            final_index = i
-
-        swap(i, m_reverse_list)
-
-    m_reverse_list = final_child
-
-    return final_index
 
 
 # 假定都是从0开始，把后面特定某个位置的元素翻转到一个位置来
@@ -178,20 +134,16 @@ def cal_smallest_child_list(node):
 
     # print smallest_distance
 
+    final_node_list = []
     final_child_list = [child[0] for child in final_child_list if child[1] == smallest_distance]
 
-    tmp_node_list = Stack.node + final_child_list
-    # final_node_list = []
-
-    # for i,cake_list in enumerate(tmp_node_list):
+    # for i,cake_list in enumerate(final_child_list):
     #     key = json.dumps(cake_list)
     #     if key not in seen_list:
     #         seen_list[key] = True
     #         final_node_list.append(cake_list)
 
-    # del tmp_node_list
-    # Stack.node = final_node_list
-    Stack.node = tmp_node_list
+    return final_child_list
 
 
 def search(step=0):
@@ -203,17 +155,6 @@ def search(step=0):
 
     n_estimate = 0
     m_search = m_search + 1
-
-    # print m_search
-
-    if not Stack.node:
-        print "opps~no more node"
-        return
-
-    node = Stack.node[-1]
-    Stack.node.pop()
-
-    print Stack.node
 
     n_estimate = cal_lower_bound(node)
     if step + n_estimate > m_max_swap:
@@ -231,18 +172,14 @@ def search(step=0):
         print "ye~find a sorted one"
         return
 
-    cal_smallest_child_list(node)
+    child_list = cal_smallest_child_list(node)
+    node.children = child_list
+    node.step = step
 
     # m_reverse_swap_list[step] = index
+
     while Stack.node:
         search(step+1)
-
-    # sys.exit()
-
-    # for child in smallest_child_list:
-    #     index = cal_index(child)
-    #     m_reverse_swap_list[step] = index
-    #     search(step+1)
 
 
 def record():
@@ -267,6 +204,7 @@ m_cake_count = 0
 m_max_swap = 0 # the max swap count we have met
 m_lower_bound = 0 #
 m_search = 0  # 当前搜索次数信息
+m_root_node = None
 
 
 if __name__ == '__main__':
