@@ -8,6 +8,7 @@
 - 在laobin.py算法里面，因为没有重用数据结构，在量大的情况下，因为盲搜带来的空间浪费还是蛮可观的。另外，基于dfs的盲搜，即使采用了upperbond和lowerbond来剪枝，还是有改进的空间。
 - 拜读了网上的一些文章后，发现在树空间的前提下，还有很多搜索的策略可以用。
 - 因为编程能力和时间的考虑，暂时先用爬山算法再写一次，同时采用公共数据结构，避免不必要的浪费。
+- 采用这种方法，必须从局部最优解集合里面去取。我第一次写的时候，只采用爬山法，把最小数的第一个拿出来，但最终最优解不一定在这个特定的集合里面，有可能在其他并列最小的集合里面。
 
 参考：
 - https://site.douban.com/161134/widget/works/8500866/chapter/18557459/
@@ -104,15 +105,11 @@ def search(step=0):
     for i in range(1, m_cake_count):
 
         swap(i)
-
         # print "step:{step}".format(step=step)
         # print "i:{i}".format(i=i)
-
         m_reverse_swap_list[step] = i
         search(step+1)
         swap(i)
-
-
         # print m_reverse_list
 
 def record():
@@ -141,7 +138,8 @@ m_search = 0  # 当前搜索次数信息
 
 if __name__ == '__main__':
     # test 1
-    cake_list = [4, 2, 1, 5, 3]
+    # cake_list = [4, 2, 1, 5, 3]
+    cake_list = [3,2,1,6,5,4,9,8,7,0] # 最优的搜索次数也要12w+次，天
     init(cake_list)
     search(0)
 

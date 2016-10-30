@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
+
 """
 问题： 星期五的晚上，一帮同事在希格玛大厦附近的“硬盘酒吧”多喝了几杯。程序员多喝了几杯之后谈什么呢？自然是算法问题。有个同事说：“我以前在餐馆打工，顾客经常点非常多的烙饼。店里的饼大小不一，我习惯在到达顾客饭桌前，把一摞饼按照大小次序摆好——小的在上面，大的在下面。由于我一只手托着盘子，只好用另一只手，一次抓住最上面的几块饼，把它们上下颠倒个个儿，反复几次之后，这摞烙饼就排好序了。我后来想，这实际上是个有趣的排序问题：假设有n块大小不一的烙饼，那最少要翻几次，才能达到最后大小有序的结果呢？” 你能否写出一个程序，对于n块大小不一的烙饼，输出最优化的翻饼过程呢？
 
@@ -14,9 +15,19 @@
 - http://blog.csdn.net/q547550831/article/details/51659803
 - http://www.cnblogs.com/TenosDoIt/p/3250742.html
 - http://blog.csdn.net/solomon1558/article/details/44226997
+
+备注：
+- 爬山法的实现有点难，还是先放着，后面再回头来写吧，一整天都在消化这个=。=
 """
+import sys
+import json
 
 __original_author__ = 'DELL'
+
+
+class Stack:
+
+    node = []
 
 
 def init(cake_list):
@@ -34,21 +45,69 @@ def init(cake_list):
 
     m_swap_list = m_reverse_swap_list = ["" for i in range(0, m_max_swap)]
 
+    Stack.node.append(m_reverse_list)
+
 
 def cal_upper_bound(cake_count):
     return 2 * cake_count - 3
 
 
-# 假定都是从0开始，把后面特定某个位置的元素翻转到一个位置来
-def swap(end=0):
+def cal_lowerest_children():
     """
     """
     global m_reverse_list
 
-    for i in range(0, end/2):
-        temp = m_reverse_list[i]
-        m_reverse_list[i] = m_reverse_list[end - i - 1]
-        m_reverse_list[end - i - 1] = temp
+    smallest_distance = None
+    final_index = 0
+
+    for i in range(1, m_cake_count):
+
+        swap(i, m_reverse_list)
+
+        total_distance = 0
+
+        child = m_reverse_list
+
+        for k,e in reversed(list(enumerate(child))):
+
+            if k == 0:
+                break
+
+            if k == child[k]:
+                continue
+
+            distance = abs(child[k] - child[k-1])
+            if distance == 1:
+                continue
+
+            total_distance = total_distance + 1
+
+        # print "\n"
+        # print "i:", i
+        # print "total_distance:", total_distance
+        # print child
+        # print "\n"
+
+        if total_distance < smallest_distance or smallest_distance is None:
+            smallest_distance = total_distance
+            final_child = child[:]
+            final_index = i
+
+        swap(i, m_reverse_list)
+
+    m_reverse_list = final_child
+
+    return final_index
+
+
+# 假定都是从0开始，把后面特定某个位置的元素翻转到一个位置来
+def swap(end, cake_list):
+    """
+    """
+    for i in range(0, end/2 + 1):
+        temp = cake_list[i]
+        cake_list[i] = cake_list[end - i]
+        cake_list[end - i] = temp
 
 
 def is_sorted(cakes):
@@ -74,6 +133,67 @@ def cal_lower_bound(cake_list):
     return ret
 
 
+def cal_smallest_child_list(node):
+    """
+    """
+    smallest_distance = None
+    final_index = 0
+    final_child_list = []
+
+    seen_list = {}
+
+    for i in range(1, m_cake_count):
+
+        swap(i, node)
+
+        total_distance = 0
+
+        child = node
+
+        for k,e in reversed(list(enumerate(child))):
+
+            if k == 0:
+                break
+
+            if k == child[k]:
+                continue
+
+            distance = abs(child[k] - child[k-1])
+            if distance == 1:
+                continue
+
+            total_distance = total_distance + 1
+
+        # print "\n"
+        # print "i:", i
+        # print "total_distance:", total_distance
+        # print child
+        # print "\n"
+
+        if total_distance <= smallest_distance or smallest_distance is None:
+            smallest_distance = total_distance
+            final_child_list.append((child[:], smallest_distance))
+
+        swap(i, node)
+
+    # print smallest_distance
+
+    final_child_list = [child[0] for child in final_child_list if child[1] == smallest_distance]
+
+    tmp_node_list = Stack.node + final_child_list
+    # final_node_list = []
+
+    # for i,cake_list in enumerate(tmp_node_list):
+    #     key = json.dumps(cake_list)
+    #     if key not in seen_list:
+    #         seen_list[key] = True
+    #         final_node_list.append(cake_list)
+
+    # del tmp_node_list
+    # Stack.node = final_node_list
+    Stack.node = tmp_node_list
+
+
 def search(step=0):
     """
     """
@@ -82,29 +202,47 @@ def search(step=0):
     global m_swap_list, m_reverse_swap_list, m_cake_count
 
     n_estimate = 0
-
     m_search = m_search + 1
 
-    n_estimate = cal_lower_bound(m_reverse_list)
-    if step + n_estimate > m_max_swap:
+    # print m_search
+
+    if not Stack.node:
+        print "opps~no more node"
         return
 
-    if is_sorted(m_reverse_list):
+    node = Stack.node[-1]
+    Stack.node.pop()
+
+    print Stack.node
+
+    n_estimate = cal_lower_bound(node)
+    if step + n_estimate > m_max_swap:
+        print "opps~exceed max swap.step({step})/n_estimate({n_estimate})/max_swap({max_swap})".format(step=step,
+                                                                                                       n_estimate=n_estimate,
+                                                                                                       max_swap=m_max_swap)
+        return
+
+    if is_sorted(node):
         if step < m_max_swap:
             m_max_swap = step
-            for k in range(0, m_max_swap):
-                m_swap_list[k] = m_reverse_swap_list[k]
+            # for k in range(0, m_max_swap):
+                # m_swap_list[k] = m_reverse_swap_list[k]
             record()
+        print "ye~find a sorted one"
         return
 
-    for i in range(1, m_cake_count):
-        swap(i)
-        # FIXME m_swap_list有bug，待确定
-        print "step:{step}".format(step=step)
-        print "i:{i}".format(i=i)
-        m_reverse_swap_list[step] = i
+    cal_smallest_child_list(node)
+
+    # m_reverse_swap_list[step] = index
+    while Stack.node:
         search(step+1)
-        swap(i)
+
+    # sys.exit()
+
+    # for child in smallest_child_list:
+    #     index = cal_index(child)
+    #     m_reverse_swap_list[step] = index
+    #     search(step+1)
 
 
 def record():
@@ -133,8 +271,13 @@ m_search = 0  # 当前搜索次数信息
 
 if __name__ == '__main__':
     # test 1
-    cake_list = [2,3,4,1,5]
-    init(cake_list)
-    search(0)
+    t_list = (
+    # [1, 2, 3, 6, 5, 4, 8, 9, 0, 7],
+    [3, 1, 2, 6, 5, 4, 8, 9, 0, 7],
+    )
+    for cake_list in t_list:
+        print "input list:", cake_list
+        init(cake_list)
+        search(0)
 
     # test 2
