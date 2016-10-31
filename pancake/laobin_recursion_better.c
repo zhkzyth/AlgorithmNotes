@@ -291,7 +291,7 @@ private:
             bool isDone = Search(step + 1, k);
             Revert(m_ReverseCakeArray, 0, swapIndexScore[i].index);
             //如果该搜索序列有序，那么其他翻转方案肯定会导致无序，因此不需要搜索
-            if(isDone == true)break;
+            if(isDone == true) return true;
         }
 
 //        for(i = 1; i <=k ; i++)
@@ -354,7 +354,8 @@ private:
 int main()
 {
     CPrefixSorting a;
-    int cakeArry[] = {3,2,1,6,5,4,9,8,7,0};
+    /* int cakeArry[] = {3,2,1,6,5,4,9,8,7,0}; */
+    int cakeArry[] = {3,1,2,6,5,4,8,9,0,7};
     int cakeArry1[] = {12,3,2,1,11,6,5,10,4,9,8,7,0};
     int cakeArry2[] = {2,0,1};
     a.Run(cakeArry, sizeof(cakeArry) / sizeof(int));

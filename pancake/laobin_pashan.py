@@ -12,7 +12,6 @@
 
 参考：
 - https://site.douban.com/161134/widget/works/8500866/chapter/18557459/
-- http://blog.csdn.net/q547550831/article/details/51659803
 - http://www.cnblogs.com/TenosDoIt/p/3250742.html
 - http://blog.csdn.net/solomon1558/article/details/44226997
 
@@ -28,11 +27,22 @@ __original_author__ = 'DELL'
 
 
 class Node:
-    def __init__(self, children=None, step=None, index=None, cake_list=None):
-        self.children = children
-        self.step = step
+
+    def __init__(self, index=None, score=None):
+        self.score = score
         self.index = index
-        self.cake_list = cake_list
+
+
+def release_all():
+    m_cake_list = None
+    m_swap_list = None
+    m_reverse_list = None
+    m_reverse_swap_list = None
+
+    m_cake_count = 0
+    m_max_swap = 0 # the max swap count we have met
+    m_search = 0  # 当前搜索次数信息
+
 
 def init(cake_list):
     """
@@ -47,9 +57,8 @@ def init(cake_list):
     m_cake_list = cake_list[:]
     m_reverse_list = cake_list[:]
 
-    m_swap_list = m_reverse_swap_list = ["" for i in range(0, m_max_swap)]
-
-    m_root_node = Node(cake_list=m_reverse_list[:])
+    m_reverse_swap_list = ["" for i in range(0, m_max_swap+1)]
+    m_swap_list = ["" for i in range(0, m_max_swap)]
 
 
 def cal_upper_bound(cake_count):
@@ -57,9 +66,13 @@ def cal_upper_bound(cake_count):
 
 
 # 假定都是从0开始，把后面特定某个位置的元素翻转到一个位置来
-def swap(end, cake_list):
+def swap(end):
     """
     """
+    global m_reverse_list
+
+    cake_list = m_reverse_list
+
     for i in range(0, end/2 + 1):
         temp = cake_list[i]
         cake_list[i] = cake_list[end - i]
@@ -89,61 +102,27 @@ def cal_lower_bound(cake_list):
     return ret
 
 
-def cal_smallest_child_list(node):
+def cal_list_score(child):
     """
     """
-    smallest_distance = None
-    final_index = 0
-    final_child_list = []
 
-    seen_list = {}
+    total_distance = 0
 
-    for i in range(1, m_cake_count):
+    for k,e in reversed(list(enumerate(child))):
 
-        swap(i, node)
+        if k == 0:
+            break
 
-        total_distance = 0
+        if k == child[k]:
+            continue
 
-        child = node
+        distance = abs(child[k] - child[k-1])
+        if distance == 1:
+            continue
 
-        for k,e in reversed(list(enumerate(child))):
+        total_distance = total_distance + 1
 
-            if k == 0:
-                break
-
-            if k == child[k]:
-                continue
-
-            distance = abs(child[k] - child[k-1])
-            if distance == 1:
-                continue
-
-            total_distance = total_distance + 1
-
-        # print "\n"
-        # print "i:", i
-        # print "total_distance:", total_distance
-        # print child
-        # print "\n"
-
-        if total_distance <= smallest_distance or smallest_distance is None:
-            smallest_distance = total_distance
-            final_child_list.append((child[:], smallest_distance))
-
-        swap(i, node)
-
-    # print smallest_distance
-
-    final_node_list = []
-    final_child_list = [child[0] for child in final_child_list if child[1] == smallest_distance]
-
-    # for i,cake_list in enumerate(final_child_list):
-    #     key = json.dumps(cake_list)
-    #     if key not in seen_list:
-    #         seen_list[key] = True
-    #         final_node_list.append(cake_list)
-
-    return final_child_list
+    return total_distance
 
 
 def search(step=0):
@@ -156,30 +135,41 @@ def search(step=0):
     n_estimate = 0
     m_search = m_search + 1
 
-    n_estimate = cal_lower_bound(node)
+    n_estimate = cal_lower_bound(m_reverse_list)
     if step + n_estimate > m_max_swap:
         print "opps~exceed max swap.step({step})/n_estimate({n_estimate})/max_swap({max_swap})".format(step=step,
                                                                                                        n_estimate=n_estimate,
                                                                                                        max_swap=m_max_swap)
-        return
+        return False
 
-    if is_sorted(node):
+    if is_sorted(m_reverse_list):
         if step < m_max_swap:
             m_max_swap = step
-            # for k in range(0, m_max_swap):
-                # m_swap_list[k] = m_reverse_swap_list[k]
-            record()
-        print "ye~find a sorted one"
-        return
+            for k in range(0, m_max_swap):
+                m_swap_list[k] = m_reverse_swap_list[k]
+        return True
 
-    child_list = cal_smallest_child_list(node)
-    node.children = child_list
-    node.step = step
+    node_set = []
 
-    # m_reverse_swap_list[step] = index
+    # 构造最佳子集
+    for i in range(0, m_cake_count):
+        swap(i)
+        node = Node()
+        node.score = cal_list_score(m_reverse_list)
+        node.index = i
+        node_set.append(node)
+        swap(i)
 
-    while Stack.node:
-        search(step+1)
+    sorted_node_set = sorted(node_set, key=lambda node: node.score)
+
+    for node in sorted_node_set:
+        swap(node.index)
+        m_reverse_swap_list[step] = node.index
+        is_done = search(step+1)
+        swap(node.index)
+        if is_done: break
+
+    return False
 
 
 def record():
@@ -191,7 +181,6 @@ def record():
     print "m_search:{m_search}".format(m_search=m_search)
     print "m_max_swap:{m_max_swap}".format(m_max_swap=m_max_swap)
     print "m_swap_list:{m_reverse_swap_list}".format(m_reverse_swap_list=m_reverse_swap_list[:m_max_swap])
-    print "final list:{m_reverse_list}".format(m_reverse_list=m_reverse_list)
     print "\n********\n"
 
 
@@ -202,7 +191,6 @@ m_reverse_list = [] # current reverse cake list
 m_reverse_swap_list = [] # current reverse cake swap list
 m_cake_count = 0
 m_max_swap = 0 # the max swap count we have met
-m_lower_bound = 0 #
 m_search = 0  # 当前搜索次数信息
 m_root_node = None
 
@@ -214,8 +202,10 @@ if __name__ == '__main__':
     [3, 1, 2, 6, 5, 4, 8, 9, 0, 7],
     )
     for cake_list in t_list:
-        print "input list:", cake_list
+        print "**** input list *****:", cake_list
         init(cake_list)
         search(0)
+        record()
+        release_all()
 
     # test 2
