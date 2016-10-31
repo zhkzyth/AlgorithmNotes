@@ -291,7 +291,7 @@ private:
             bool isDone = Search(step + 1, k);
             Revert(m_ReverseCakeArray, 0, swapIndexScore[i].index);
             //如果该搜索序列有序，那么其他翻转方案肯定会导致无序，因此不需要搜索
-            if(isDone == true) return true;
+            if(isDone == true) break;
         }
 
 //        for(i = 1; i <=k ; i++)
