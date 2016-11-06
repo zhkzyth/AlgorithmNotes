@@ -18,7 +18,10 @@
 备注：
 - 爬山法的实现有点难，还是先放着，后面再回头来写吧，一整天都在消化这个=。=
 - laobin_recursion_better.c里面，用了一个比较简单的node结构，以及基于子集本身的有序性算分的机制，进一步的把dfs的搜索策略优化了，往最容易找到结果集的子空间去探索。
-- TODO 用python实现一个
+- 用python实现一个
+
+输入限制：
+- 至少两个元素的数组
 """
 import sys
 import json
@@ -57,10 +60,11 @@ def init(cake_list):
     m_cake_list = cake_list[:]
     m_reverse_list = cake_list[:]
 
-    m_reverse_swap_list = ["" for i in range(0, m_max_swap+1)]
+    m_reverse_swap_list = ["" for i in range(0, m_max_swap+1)] # TODO 为什么这里要加1 ; 因为要给多走一步step判断用
     m_swap_list = ["" for i in range(0, m_max_swap)]
 
 
+# TODO upper bound 的次数还可以再缩减
 def cal_upper_bound(cake_count):
     return 2 * cake_count - 3
 
@@ -110,66 +114,97 @@ def cal_list_score(child):
     """
     """
 
-    total_distance = 0
+    # total_distance = 0
 
-    for k,e in reversed(list(enumerate(child))):
+    # for k,e in reversed(list(enumerate(child))):
 
-        if k == 0:
-            break
+    #     if k == 0:
+    #         break
 
-        if k == child[k]:
-            continue
+    #     if k == child[k]:
+    #         continue
 
-        distance = abs(child[k] - child[k-1])
-        if distance == 1:
-            continue
+    #     distance = abs(child[k] - child[k-1])
+    #     if distance == 1:
+    #         continue
 
-        total_distance = total_distance + 1
+    #     total_distance = total_distance + 1
 
-    return total_distance
+    # return total_distance
 
 
-def search(step=0):
+
+
+def search(step=0, end=0):
     """
     """
 
     global m_search, m_max_swap, m_reverse_list
     global m_swap_list, m_reverse_swap_list, m_cake_count
+    global m_flag
 
     n_estimate = 0
     m_search = m_search + 1
 
     n_estimate = cal_lower_bound(m_reverse_list)
-    if step + n_estimate > m_max_swap:
+    if step + n_estimate >= m_max_swap:
         print "opps~exceed max swap.step({step})/n_estimate({n_estimate})/max_swap({max_swap})".format(step=step,
                                                                                                        n_estimate=n_estimate,
                                                                                                        max_swap=m_max_swap)
         return False
 
-    if is_sorted(m_reverse_list):
+    k = end
+    while k > 0 and k == m_reverse_list[k]:
+        k = k - 1
+
+    if k == 0:
+        # if is_sorted(m_reverse_list):
         if step < m_max_swap:
             m_max_swap = step
             for k in range(0, m_max_swap):
                 m_swap_list[k] = m_reverse_swap_list[k]
+
+        elif step == m_max_swap and m_flag == False:
+            # 只记录第一组找到的最小swap_list，同时避免m_max_swap就是step的情况，比如输入一个只有1个元素的数组
+            m_max_swap = step
+            m_flag = True
+            for k in range(0, m_max_swap):
+                m_swap_list[k] = m_reverse_swap_list[k]
+
         return True
 
     node_set = []
 
     # 构造最佳子集
-    for i in range(0, m_cake_count):
-        swap(i)
+    # TODO 这里的交换次数分数，依据是什么呢？
+    #  TODO 基础分数是从cal_lower_bound算出来的，所以要减掉的话，应该从那里加出来来分析
+    # TODO 太晚了，先睡觉
+    for i in range(1, k+1):
         node = Node()
-        node.score = cal_list_score(m_reverse_list)
         node.index = i
+        node.score = n_estimate
+
+        # 这里的计算还可以再优化，算法的出发点要多读几遍原文去理解哈=）
+        if i != m_cake_count -1:
+            if abs(m_reverse_list[i] - m_reverse_list[i+1]) == 1: # 不在自己的位置上，但又相隔1，必然会导致一次交换
+                node.score = node.score + 1
+            # 这个减少分数的逻辑就有点看不懂了=(
+            if abs(m_reverse_list[0] - m_reverse_list[i+1]) == 1:
+                node.score = node.score - 1
+        else:
+            # if m_reverse_list[i] == i:
+                # node.score = node.score + 1
+            if m_reverse_list[0] == i:
+                node.score = node.score - 1
+
         node_set.append(node)
-        swap(i)
 
     sorted_node_set = sorted(node_set, key=lambda node: node.score)
 
     for node in sorted_node_set:
         swap(node.index)
         m_reverse_swap_list[step] = node.index
-        is_done = search(step+1)
+        is_done = search(step+1, k)
         swap(node.index)
         if is_done:
             break
@@ -198,6 +233,7 @@ m_cake_count = 0
 m_max_swap = 0 # the max swap count we have met
 m_search = 0  # 当前搜索次数信息
 m_root_node = None
+m_flag = False
 
 
 if __name__ == '__main__':
@@ -205,11 +241,13 @@ if __name__ == '__main__':
     t_list = (
     # [1, 2, 3, 6, 5, 4, 8, 9, 0, 7],
     [3, 1, 2, 6, 5, 4, 8, 9, 0, 7],
+    [12,3,2,1,11,6,5,10,4,9,8,7,0],
+    [2,0,1]
     )
     for cake_list in t_list:
         print "**** input list *****:", cake_list
         init(cake_list)
-        search(0)
+        search(0, len(cake_list)-1)
         record()
         release_all()
 
