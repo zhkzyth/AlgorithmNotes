@@ -99,6 +99,10 @@ def cal_lower_bound(cake_list):
         if t not in (1,-1):
             ret = ret + 1
 
+    if cake_list[len(cake_list) - 1] != len(cake_list) -1 :
+
+        ret = ret + 1
+
     return ret
 
 
@@ -167,7 +171,8 @@ def search(step=0):
         m_reverse_swap_list[step] = node.index
         is_done = search(step+1)
         swap(node.index)
-        if is_done: break
+        if is_done:
+            break
 
     return False
 
@@ -180,7 +185,7 @@ def record():
     print "input_list:{input_list}".format(input_list=m_cake_list)
     print "m_search:{m_search}".format(m_search=m_search)
     print "m_max_swap:{m_max_swap}".format(m_max_swap=m_max_swap)
-    print "m_swap_list:{m_reverse_swap_list}".format(m_reverse_swap_list=m_reverse_swap_list[:m_max_swap])
+    print "m_swap_list:{m_swap_list}".format(m_swap_list=m_swap_list[:m_max_swap])
     print "\n********\n"
 
 

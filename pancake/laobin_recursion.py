@@ -139,7 +139,8 @@ m_search = 0  # 当前搜索次数信息
 if __name__ == '__main__':
     # test 1
     # cake_list = [4, 2, 1, 5, 3]
-    cake_list = [3,2,1,6,5,4,9,8,7,0] # 最优的搜索次数也要12w+次，天
+    # cake_list = [3,2,1,6,5,4,9,8,7,0] # 最优的搜索次数也要12w+次，天
+    cake_list = [3, 1, 2, 6, 5, 4, 8, 9, 0, 7]
     init(cake_list)
     search(0)
 
