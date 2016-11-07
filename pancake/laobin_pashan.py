@@ -56,10 +56,13 @@ def init(cake_list):
 
     m_cake_count = n = len(cake_list)
 
-    m_max_swap = cal_upper_bound(n)
-
     m_cake_list = cake_list[:]
     m_reverse_list = cake_list[:]
+
+    # m_max_swap = cal_upper_bound(n)
+    m_max_swap = cal_upper_bound_more(cake_list)
+
+    # print m_max_swap
 
     m_reverse_swap_list = ["" for i in range(0, m_max_swap+1)] # TODO 为什么这里要加1 ; 因为要给多走一步step判断用
     m_swap_list = ["" for i in range(0, m_max_swap)]
@@ -68,6 +71,38 @@ def init(cake_list):
 # TODO upper bound 的次数还可以再缩减
 def cal_upper_bound(cake_count):
     return 2 * cake_count - 3
+
+
+def cal_upper_bound_more(cake_list):
+
+    re = 0
+
+    cake_count = len(cake_list)
+
+    j = cake_count - 1
+
+    while j:
+
+        while j > 0 and j == cake_list[j]:
+            j = j - 1
+
+        if j <= 0 :
+            break
+
+        i = j
+
+        while i >= 0 and cake_list[i] != j:
+            i = i -1
+
+        if i != 0:
+            reverse(cake_list, i)
+            re = re + 1
+
+        reverse(cake_list, j)
+        re = re + 1
+        j = j - 1
+
+    return re
 
 
 # 假定都是从0开始，把后面特定某个位置的元素翻转到一个位置来
@@ -81,6 +116,18 @@ def swap(end):
     for i in range(0, end/2 + 1):
         temp = cake_list[i]
         cake_list[i] = cake_list[end - i]
+        cake_list[end - i] = temp
+
+
+def reverse(cake_list, end):
+    """
+    """
+    for i in range(0, end/2 + 1):
+
+        temp = cake_list[i]
+
+        cake_list[i] = cake_list[end - i]
+
         cake_list[end - i] = temp
 
 
@@ -177,8 +224,6 @@ def search(step=0, end=0):
     node_set = []
 
     # 构造最佳子集
-    # TODO 这里的交换次数分数，依据是什么呢？
-    # TODO 基础分数是从cal_lower_bound算出来的，所以要减掉的话，应该从那里加出来来分析
     for i in range(1, k+1):
         node = Node()
         node.index = i
@@ -188,7 +233,6 @@ def search(step=0, end=0):
         if i != m_cake_count -1:
             if abs(m_reverse_list[i] - m_reverse_list[i+1]) == 1: # 不在自己的位置上，但又相隔1，必然会导致一次交换
                 node.score = node.score + 1
-            # 这个减少分数的逻辑就有点看不懂了=(
             if abs(m_reverse_list[0] - m_reverse_list[i+1]) == 1:
                 node.score = node.score - 1
         else:

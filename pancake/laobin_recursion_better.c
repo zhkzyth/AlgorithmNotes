@@ -266,6 +266,7 @@ private:
             struct node tnode;
             tnode.index = i;
             tnode.score = nEstimate;//原始序列的分数
+
             //求翻转后的分数，翻转后只有翻转位置影响分数的大小
             if(i != m_nCakeCnt - 1)
             {
@@ -279,8 +280,10 @@ private:
                 if(m_ReverseCakeArray[i] == i)tnode.score++;
                 if(m_ReverseCakeArray[0] == i)tnode.score--;
             }
+
             swapIndexScore.push_back(tnode);
         }
+
         //按照得分小到大排序，得分小的优先搜索
         sort(swapIndexScore.begin(), swapIndexScore.end(),comp);
 
