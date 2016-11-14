@@ -138,7 +138,6 @@ private:
         assert(m_ReverseCakeArraySwap != NULL);
     }
 
-
     //
     // 寻找当前翻转的上界
     //

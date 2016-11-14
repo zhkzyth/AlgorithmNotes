@@ -38,6 +38,10 @@ class Node:
 
 
 def release_all():
+
+    global m_cake_list, m_swap_list, m_reverse_list, m_reverse_swap_list
+    global m_cake_count, m_max_swap, m_search, m_root_node, m_flag
+
     m_cake_list = None
     m_swap_list = None
     m_reverse_list = None
@@ -46,6 +50,9 @@ def release_all():
     m_cake_count = 0
     m_max_swap = 0 # the max swap count we have met
     m_search = 0  # 当前搜索次数信息
+
+    m_root_node = None
+    m_flag = False
 
 
 def init(cake_list):
@@ -195,10 +202,21 @@ def search(step=0, end=0):
     m_search = m_search + 1
 
     n_estimate = cal_lower_bound(m_reverse_list)
-    if step + n_estimate >= m_max_swap:
-        print "opps~exceed max swap.step({step})/n_estimate({n_estimate})/max_swap({max_swap})".format(step=step,
-                                                                                                       n_estimate=n_estimate,
-                                                                                                       max_swap=m_max_swap)
+
+    # if n_estimate == m_max_swap:
+    #     if m_flag != False:
+    #         return False
+    #     else:
+    #         pass
+    # elif step + n_estimate > m_max_swap:
+    #     # print "opps~exceed max swap.step({step})/n_estimate({n_estimate})/max_swap({max_swap})".format(step=step,
+    #                                                                                                    # n_estimate=n_estimate,
+    #                                                                                                    # max_swap=m_max_swap)
+    #     return False
+
+    if step + n_estimate == m_max_swap and m_flag == False:
+        pass
+    elif step + n_estimate >= m_max_swap:
         return False
 
     k = end
@@ -206,6 +224,7 @@ def search(step=0, end=0):
         k = k - 1
 
     if k == 0:
+        # print("O**(&*(&(*&(*&))))")
         # if is_sorted(m_reverse_list):
         if step < m_max_swap:
             m_max_swap = step
@@ -283,10 +302,11 @@ m_flag = False
 if __name__ == '__main__':
     # test 1
     t_list = (
-    # [1, 2, 3, 6, 5, 4, 8, 9, 0, 7],
-    [3, 1, 2, 6, 5, 4, 8, 9, 0, 7],
-    [12,3,2,1,11,6,5,10,4,9,8,7,0],
-    [2,0,1]
+        # [1, 2, 3, 6, 5, 4, 8, 9, 0, 7],
+        [3, 1, 2, 6, 5, 4, 8, 9, 0, 7],
+        [12,3,2,1,11,6,5,10,4,9,8,7,0],
+        [2,0,1],
+        # [2]
     )
     for cake_list in t_list:
         print "**** input list *****:", cake_list
