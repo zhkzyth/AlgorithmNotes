@@ -1,2 +1,3 @@
 # AlgorithmNotes
+
 All about algorithm
